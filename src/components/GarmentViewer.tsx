@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { Button } from "@/components/ui/button";
 import { GarmentModel } from "./GarmentModel";
 
-const DEFAULT_MODEL = "/models/garment.glb";
+const MODEL_MANIFEST = "/models/model.json";
 
 function ModelLoader() {
   const { progress } = useProgress();
@@ -52,12 +52,15 @@ export function GarmentViewer() {
 
   useEffect(() => {
     let active = true;
-    fetch(DEFAULT_MODEL, { method: "HEAD" }).then((response) => {
-      if (active && response.ok && response.headers.get("content-type")?.includes("model")) {
-        setSource(DEFAULT_MODEL);
-        setFileName("garment.glb");
-      }
-    }).catch(() => undefined);
+    fetch(MODEL_MANIFEST)
+      .then((response) => response.json() as Promise<{ source: string | null }>)
+      .then((manifest) => {
+        if (active && manifest.source) {
+          setSource(manifest.source);
+          setFileName(manifest.source.split("/").pop() ?? "garment.glb");
+        }
+      })
+      .catch(() => undefined);
     return () => { active = false; };
   }, []);
 
