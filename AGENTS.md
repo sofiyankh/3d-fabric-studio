@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Real garment visuals must come from a production GLB containing the mannequin and embedded PBR textures; never recreate garments from primitives because geometry and fabric fidelity are source-data requirements.
