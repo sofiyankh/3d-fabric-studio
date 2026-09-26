@@ -1,10 +1,10 @@
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useProgress } from "@react-three/drei";
-import { Box, CheckCircle2, ImagePlus, Rotate3D, Upload, X } from "lucide-react";
+import { Box, CheckCircle2, ImagePlus, Rotate3D, Stamp, Upload, X } from "lucide-react";
 import { Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import * as THREE from "three";
 import { Button } from "@/components/ui/button";
-import { GarmentModel } from "./GarmentModel";
+import { GarmentModel, type DesignMode } from "./GarmentModel";
 
 const MODEL_MANIFEST = "/models/model.json";
 
@@ -20,10 +20,11 @@ function ModelLoader() {
 interface StudioProps {
   source: string | null;
   design: string | null;
+  designMode: DesignMode;
   designRepeat: number;
 }
 
-function Studio({ source, design, designRepeat }: StudioProps) {
+function Studio({ source, design, designMode, designRepeat }: StudioProps) {
   return (
     <>
       <color attach="background" args={["#d9d7d1"]} />
