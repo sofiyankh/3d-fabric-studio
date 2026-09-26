@@ -39,7 +39,7 @@ function Studio({ source, design, designMode, designRepeat }: StudioProps) {
       </Environment>
       {source ? (
         <Suspense fallback={<ModelLoader />}>
-          <GarmentModel source={source} design={design} designRepeat={designRepeat} />
+          <GarmentModel source={source} design={design} designMode={designMode} designRepeat={designRepeat} />
         </Suspense>
       ) : null}
       <ContactShadows position={[0, -2.56, 0]} opacity={0.38} scale={8} blur={2.5} far={5} color="#363636" />
@@ -59,6 +59,7 @@ export function GarmentViewer() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [design, setDesign] = useState<string | null>(null);
   const [designName, setDesignName] = useState<string | null>(null);
+  const [designMode, setDesignMode] = useState<DesignMode>("logo");
   const [designRepeat, setDesignRepeat] = useState(2);
 
   useEffect(() => {
