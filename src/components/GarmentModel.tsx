@@ -80,8 +80,8 @@ export function GarmentModel({ source, design, designRepeat }: GarmentModelProps
       if (child instanceof THREE.Mesh) {
         const materials = Array.isArray(child.material) ? child.material : [child.material];
         materials.forEach((material) => {
-          if (material instanceof THREE.MeshStandardMaterial && material.userData.__originalMap !== undefined) {
-            material.map = material.userData.__originalMap;
+          if (material instanceof THREE.MeshStandardMaterial && material.userData["__originalMap"] !== undefined) {
+            material.map = material.userData["__originalMap"] as THREE.Texture | null;
             material.needsUpdate = true;
           }
         });
