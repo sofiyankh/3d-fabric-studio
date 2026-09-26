@@ -1,10 +1,10 @@
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useProgress } from "@react-three/drei";
-import { Box, CheckCircle2, ImagePlus, Rotate3D, Upload, X } from "lucide-react";
+import { Box, CheckCircle2, ImagePlus, Rotate3D, Stamp, Upload, X } from "lucide-react";
 import { Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import * as THREE from "three";
 import { Button } from "@/components/ui/button";
-import { GarmentModel } from "./GarmentModel";
+import { GarmentModel, type DesignMode } from "./GarmentModel";
 
 const MODEL_MANIFEST = "/models/model.json";
 
@@ -20,10 +20,11 @@ function ModelLoader() {
 interface StudioProps {
   source: string | null;
   design: string | null;
+  designMode: DesignMode;
   designRepeat: number;
 }
 
-function Studio({ source, design, designRepeat }: StudioProps) {
+function Studio({ source, design, designMode, designRepeat }: StudioProps) {
   return (
     <>
       <color attach="background" args={["#d9d7d1"]} />
@@ -38,7 +39,7 @@ function Studio({ source, design, designRepeat }: StudioProps) {
       </Environment>
       {source ? (
         <Suspense fallback={<ModelLoader />}>
-          <GarmentModel source={source} design={design} designRepeat={designRepeat} />
+          <GarmentModel source={source} design={design} designMode={designMode} designRepeat={designRepeat} />
         </Suspense>
       ) : null}
       <ContactShadows position={[0, -2.56, 0]} opacity={0.38} scale={8} blur={2.5} far={5} color="#363636" />
@@ -58,6 +59,7 @@ export function GarmentViewer() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [design, setDesign] = useState<string | null>(null);
   const [designName, setDesignName] = useState<string | null>(null);
+  const [designMode, setDesignMode] = useState<DesignMode>("logo");
   const [designRepeat, setDesignRepeat] = useState(2);
 
   useEffect(() => {
@@ -107,7 +109,7 @@ export function GarmentViewer() {
 
       <section className="viewer-stage" aria-label="Interactive 3D garment viewer">
         <Canvas shadows dpr={[1, 1.75]} camera={{ position: [0, 0.1, 8.4], fov: 42 }} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}>
-          <Studio source={source} design={design} designRepeat={designRepeat} />
+          <Studio source={source} design={design} designMode={designMode} designRepeat={designRepeat} />
         </Canvas>
         {!source && (
           <div className="empty-model-state">
@@ -137,6 +139,22 @@ export function GarmentViewer() {
         <div className="model-source design-source">
           <span>Fabric design</span>
           <strong>{designName ?? "Original material"}</strong>
+          <div className="design-mode" role="group" aria-label="Design mode">
+            <button
+              type="button"
+              data-active={designMode === "logo"}
+              onClick={() => setDesignMode("logo")}
+            >
+              <Stamp /> Logo placement
+            </button>
+            <button
+              type="button"
+              data-active={designMode === "print"}
+              onClick={() => setDesignMode("print")}
+            >
+              <ImagePlus /> Full print
+            </button>
+          </div>
           <div className="design-actions">
             <Button variant="outline" onClick={() => designInputRef.current?.click()} disabled={!source}>
               <ImagePlus /> {design ? "Replace design" : "Apply design"}
@@ -146,7 +164,7 @@ export function GarmentViewer() {
             )}
           </div>
           <input ref={designInputRef} className="sr-only" type="file" accept="image/*" onChange={chooseDesign} />
-          {design && (
+          {design && designMode === "print" && (
             <label className="design-repeat">
               <span>Pattern scale · {designRepeat}×</span>
               <input
@@ -158,6 +176,9 @@ export function GarmentViewer() {
                 onChange={(event) => setDesignRepeat(Number(event.target.value))}
               />
             </label>
+          )}
+          {design && designMode === "logo" && (
+            <p className="design-hint">Logo is placed on the chest of the garment.</p>
           )}
         </div>
 
