@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows, Environment, Html, Lightformer, OrbitControls, useProgress } from "@react-three/drei";
-import { Box, CheckCircle2, Rotate3D, Upload } from "lucide-react";
+import { Box, CheckCircle2, ImagePlus, Rotate3D, Upload, X } from "lucide-react";
 import { Suspense, useEffect, useRef, useState, type ChangeEvent } from "react";
 import * as THREE from "three";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,13 @@ function ModelLoader() {
   );
 }
 
-function Studio({ source }: { source: string | null }) {
+interface StudioProps {
+  source: string | null;
+  design: string | null;
+  designRepeat: number;
+}
+
+function Studio({ source, design, designRepeat }: StudioProps) {
   return (
     <>
       <color attach="background" args={["#d9d7d1"]} />
@@ -32,7 +38,7 @@ function Studio({ source }: { source: string | null }) {
       </Environment>
       {source ? (
         <Suspense fallback={<ModelLoader />}>
-          <GarmentModel source={source} />
+          <GarmentModel source={source} design={design} designRepeat={designRepeat} />
         </Suspense>
       ) : null}
       <ContactShadows position={[0, -2.56, 0]} opacity={0.38} scale={8} blur={2.5} far={5} color="#363636" />
@@ -47,8 +53,12 @@ function Studio({ source }: { source: string | null }) {
 
 export function GarmentViewer() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const designInputRef = useRef<HTMLInputElement>(null);
   const [source, setSource] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [design, setDesign] = useState<string | null>(null);
+  const [designName, setDesignName] = useState<string | null>(null);
+  const [designRepeat, setDesignRepeat] = useState(2);
 
   useEffect(() => {
     let active = true;
@@ -72,6 +82,21 @@ export function GarmentViewer() {
     setFileName(file.name);
   };
 
+  const chooseDesign = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (design?.startsWith("blob:")) URL.revokeObjectURL(design);
+    setDesign(URL.createObjectURL(file));
+    setDesignName(file.name);
+  };
+
+  const clearDesign = () => {
+    if (design?.startsWith("blob:")) URL.revokeObjectURL(design);
+    setDesign(null);
+    setDesignName(null);
+    if (designInputRef.current) designInputRef.current.value = "";
+  };
+
   return (
     <main className="showroom-shell">
       <header className="showroom-header">
@@ -82,7 +107,7 @@ export function GarmentViewer() {
 
       <section className="viewer-stage" aria-label="Interactive 3D garment viewer">
         <Canvas shadows dpr={[1, 1.75]} camera={{ position: [0, 0.1, 8.4], fov: 42 }} gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping }}>
-          <Studio source={source} />
+          <Studio source={source} design={design} designRepeat={designRepeat} />
         </Canvas>
         {!source && (
           <div className="empty-model-state">
@@ -109,9 +134,36 @@ export function GarmentViewer() {
           <input ref={inputRef} className="sr-only" type="file" accept=".glb,model/gltf-binary" onChange={chooseModel} />
         </div>
 
+        <div className="model-source design-source">
+          <span>Fabric design</span>
+          <strong>{designName ?? "Original material"}</strong>
+          <div className="design-actions">
+            <Button variant="outline" onClick={() => designInputRef.current?.click()} disabled={!source}>
+              <ImagePlus /> {design ? "Replace design" : "Apply design"}
+            </Button>
+            {design && (
+              <Button variant="ghost" onClick={clearDesign} aria-label="Remove design"><X /> Remove</Button>
+            )}
+          </div>
+          <input ref={designInputRef} className="sr-only" type="file" accept="image/*" onChange={chooseDesign} />
+          {design && (
+            <label className="design-repeat">
+              <span>Pattern scale · {designRepeat}×</span>
+              <input
+                type="range"
+                min={1}
+                max={8}
+                step={1}
+                value={designRepeat}
+                onChange={(event) => setDesignRepeat(Number(event.target.value))}
+              />
+            </label>
+          )}
+        </div>
+
         <dl className="material-specs">
           <div><dt>Geometry</dt><dd>{source ? <><CheckCircle2 /> Imported</> : "Pending"}</dd></div>
-          <div><dt>Materials</dt><dd>{source ? <><CheckCircle2 /> Original PBR</> : "Pending"}</dd></div>
+          <div><dt>Materials</dt><dd>{source ? <><CheckCircle2 /> {design ? "Custom design" : "Original PBR"}</> : "Pending"}</dd></div>
           <div><dt>Lighting</dt><dd>Calibrated studio</dd></div>
         </dl>
       </aside>
